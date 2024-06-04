@@ -38,7 +38,7 @@ int main() {
     }
 
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr("89.218.36.107");
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(PORT);
 
     if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
@@ -53,7 +53,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on IP %s and port %d\n", "89.218.36.107", PORT);
+    printf("Server listening on port %d\n", PORT);
 
     while (1) {
         clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &addrLen);
@@ -173,6 +173,7 @@ void Reg(int clientSocket) {
     char buffer[BUFFER_SIZE];
     int num;
 
+    sendMessage(clientSocket, "Enter number of Customers:");
     receiveMessage(clientSocket, buffer);
     num = atoi(buffer);
 
