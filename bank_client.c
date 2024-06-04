@@ -1,25 +1,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
-typedef struct {
-    char accno[20];
-    char fname[20];
-    char lname[20];
-    float bal;
-} Customer;
+#define PORT 8080
+#define BUFFER_SIZE 1024
 
-FILE *file;
-
-void Reg(void);
-void Deposit(void);
-void Withdraw(void);
-void Balance(void);
-void readCustomer(char *accno, Customer *customer);
-void updateCustomer(Customer *customer);
+void Deposit(int sock);
+void Withdraw(int sock);
+void Balance(int sock);
+void Reg(int sock);
+void sendMessage(int sock, const char *message);
+void receiveMessage(int sock, char *buffer);
 
 int main(void) {
+    int sock;
+    struct sockaddr_in serverAddr;
+    char buffer[BUFFER_SIZE];
     int choice;
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("Socket creation error");
+        exit(EXIT_FAILURE);
+    }
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (connect(sock, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
+        perror("Connection failed");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
     while (1) {
         printf("MENU\n");
         printf("MAKE A CHOICE: \n");
@@ -31,149 +47,124 @@ int main(void) {
 
         printf("Enter choice: \n");
         scanf("%d", &choice);
+        snprintf(buffer, BUFFER_SIZE, "%d", choice);
+        sendMessage(sock, buffer);
+
         switch (choice) {
             case 1:
-                Deposit();
+                Deposit(sock);
                 break;
             case 2:
-                Withdraw();
+                Withdraw(sock);
                 break;
             case 3:
-                Balance();
+                Balance(sock);
                 break;
             case 4:
-                Reg();
+                Reg(sock);
                 break;
             case 5:
+                close(sock);
+                printf("Disconnected from server.\n");
                 exit(0);
             default:
                 printf("Invalid choice, please try again.\n");
         }
     }
+
+    return 0;
 }
 
-void Deposit(void) {
+void Deposit(int sock) {
+    char buffer[BUFFER_SIZE];
     char accno[20];
     float amt;
-    Customer customer;
 
-    printf("Enter account number: \n");
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%s", accno);
-    readCustomer(accno, &customer);
+    sendMessage(sock, accno);
 
-    printf("Enter amount to Deposit: \n");
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%f", &amt);
+    snprintf(buffer, BUFFER_SIZE, "%.2f", amt);
+    sendMessage(sock, buffer);
 
-    customer.bal += amt;
-    updateCustomer(&customer);
-    printf("New Balance: %.2f\n", customer.bal);
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
 }
 
-void Withdraw(void) {
+void Withdraw(int sock) {
+    char buffer[BUFFER_SIZE];
     char accno[20];
     float amt;
-    Customer customer;
 
-    printf("Enter account number: \n");
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%s", accno);
-    readCustomer(accno, &customer);
+    sendMessage(sock, accno);
 
-    printf("Enter amount to Withdraw: \n");
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%f", &amt);
+    snprintf(buffer, BUFFER_SIZE, "%.2f", amt);
+    sendMessage(sock, buffer);
 
-    if (amt > customer.bal) {
-        printf("Insufficient balance.\n");
-    } else {
-        customer.bal -= amt;
-        updateCustomer(&customer);
-        printf("New Balance: %.2f\n", customer.bal);
-    }
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
 }
 
-void Balance(void) {
+void Balance(int sock) {
+    char buffer[BUFFER_SIZE];
     char accno[20];
-    Customer customer;
 
-    printf("Enter account number: \n");
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%s", accno);
-    readCustomer(accno, &customer);
+    sendMessage(sock, accno);
 
-    printf("Current Balance: %.2f\n", customer.bal);
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
 }
 
-void Reg(void) {
+void Reg(int sock) {
+    char buffer[BUFFER_SIZE];
     int num;
-    printf("Enter number of Customers: \n");
+
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
     scanf("%d", &num);
+    snprintf(buffer, BUFFER_SIZE, "%d", num);
+    sendMessage(sock, buffer);
 
-    file = fopen("accounts.txt", "a");
-    if (file == NULL) {
-        perror("ERROR opening the FILE!!!");
-        exit(1);
-    }
-
-    Customer customer[num];
     for (int i = 0; i < num; i++) {
         printf("Account Number: \n");
-        scanf("%s", customer[i].accno);
+        scanf("%s", buffer);
+        sendMessage(sock, buffer);
 
         printf("First Name: \n");
-        scanf("%s", customer[i].fname);
+        scanf("%s", buffer);
+        sendMessage(sock, buffer);
 
         printf("Last Name: \n");
-        scanf("%s", customer[i].lname);
+        scanf("%s", buffer);
+        sendMessage(sock, buffer);
 
         printf("Balance: \n");
-        scanf("%f", &customer[i].bal);
-
-        fprintf(file, "%s %s %s %.2f\n", customer[i].accno, customer[i].fname, customer[i].lname, customer[i].bal);
+        scanf("%s", buffer);
+        sendMessage(sock, buffer);
     }
-    fclose(file);
+
+    receiveMessage(sock, buffer);
+    printf("%s\n", buffer);
 }
 
-void readCustomer(char *accno, Customer *customer) {
-    file = fopen("accounts.txt", "r");
-    if (file == NULL) {
-        perror("ERROR opening the FILE!!!");
-        exit(1);
-    }
-
-    while (fscanf(file, "%s %s %s %f", customer->accno, customer->fname, customer->lname, &customer->bal) != EOF) {
-        if (strcmp(customer->accno, accno) == 0) {
-            fclose(file);
-            return;
-        }
-    }
-    fclose(file);
-    printf("Account not found.\n");
-    exit(1);
+void sendMessage(int sock, const char *message) {
+    send(sock, message, strlen(message), 0);
 }
 
-void updateCustomer(Customer *customer) {
-    FILE *tempFile = fopen("temp.txt", "w");
-    if (tempFile == NULL) {
-        perror("ERROR opening the FILE!!!");
-        exit(1);
-    }
-
-    file = fopen("accounts.txt", "r");
-    if (file == NULL) {
-        perror("ERROR opening the FILE!!!");
-        fclose(tempFile);
-        exit(1);
-    }
-
-    Customer tempCustomer;
-    while (fscanf(file, "%s %s %s %f", tempCustomer.accno, tempCustomer.fname, tempCustomer.lname, &tempCustomer.bal) != EOF) {
-        if (strcmp(tempCustomer.accno, customer->accno) == 0) {
-            fprintf(tempFile, "%s %s %s %.2f\n", customer->accno, customer->fname, customer->lname, customer->bal);
-        } else {
-            fprintf(tempFile, "%s %s %s %.2f\n", tempCustomer.accno, tempCustomer.fname, tempCustomer.lname, tempCustomer.bal);
-        }
-    }
-
-    fclose(file);
-    fclose(tempFile);
-    remove("accounts.txt");
-    rename("temp.txt", "accounts.txt");
+void receiveMessage(int sock, char *buffer) {
+    int len = recv(sock, buffer, BUFFER_SIZE, 0);
+    buffer[len] = '\0';
 }
