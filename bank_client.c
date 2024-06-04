@@ -28,7 +28,7 @@ int main(void) {
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT);
-    serverAddr.sin_addr.s_addr = inet_addr("142.168.24.98");
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (connect(sock, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
         perror("Connection failed");
