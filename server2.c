@@ -99,10 +99,10 @@ int main() {
         printf("Received from client: %s\n", buffer);
 
         // Process the request
-        process_request(buffer, newsockfd, sockfd);
+        process_request(buffer, client_addr, sockfd);
 
         // Close the client socket
-        close(newsockfd);
+        close(client_addr);
     }
 
     close(sockfd);
