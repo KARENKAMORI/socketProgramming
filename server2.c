@@ -87,7 +87,7 @@ int main() {
         int recv_len = recv(sockfd, buffer, MAX_MESSAGE_SIZE, 0);
         if (recv_len < 0) {
             perror("Recv failed");
-            close(newsockfd);
+            close(sockfd);
             continue;
         }
 
@@ -101,7 +101,7 @@ int main() {
         process_request(buffer, client_addr, sockfd);
 
         // Close the client socket
-        close(sockaddr_in);
+        close(sockaddr_in server_addr);
     }
 
     close(sockfd);
