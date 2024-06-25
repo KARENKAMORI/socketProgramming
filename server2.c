@@ -101,7 +101,7 @@ int main() {
         process_request(buffer, client_addr, sockfd);
 
         // Close the client socket
-        close(struct sockaddr_in);
+        close(sockaddr_in);
     }
 
     close(sockfd);
