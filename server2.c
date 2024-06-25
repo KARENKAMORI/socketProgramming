@@ -47,8 +47,9 @@ int read_books_from_file(struct bookStore* books, int max_books);
 void process_request(char *request, struct sockaddr_in client_addr, int sockfd);
 
 int main() {
-    int sockfd, newsockfd, clilen;
+    int sockfd;
     struct sockaddr_in server_addr, client_addr;
+    socklen_t addrlen = sizeof(client_addr);
     char buffer[MAX_MESSAGE_SIZE];
 
     // Create socket
