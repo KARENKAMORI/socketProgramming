@@ -77,8 +77,8 @@ int main() {
 
     while (1) {
         // Accept incoming connection
-        newsockfd = accept(sockfd, (struct sockaddr *)&client_addr, (socklen_t*)&addrlen);
-        if (newsockfd < 0) {
+        sockfd = accept(sockfd, (struct sockaddr *)&client_addr, (socklen_t*)&addrlen);
+        if (sockfd < 0) {
             perror("Accept failed");
             continue;
         }
