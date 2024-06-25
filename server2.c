@@ -84,7 +84,7 @@ int main() {
         }
 
         // Receive request from client
-        int recv_len = recv(newsockfd, buffer, MAX_MESSAGE_SIZE, 0);
+        int recv_len = recv(sockfd, buffer, MAX_MESSAGE_SIZE, 0);
         if (recv_len < 0) {
             perror("Recv failed");
             close(newsockfd);
