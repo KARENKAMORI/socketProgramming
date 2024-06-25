@@ -72,13 +72,12 @@ int main() {
 
     // Listen for incoming connections
     listen(sockfd, 5);
-    clilen = sizeof(client_addr);
 
     printf("Server listening on port %d...\n", PORT);
 
     while (1) {
         // Accept incoming connection
-        newsockfd = accept(sockfd, (struct sockaddr *)&client_addr, (socklen_t*)&clilen);
+        newsockfd = accept(sockfd, (struct sockaddr *)&client_addr, (socklen_t*)&addrlen);
         if (newsockfd < 0) {
             perror("Accept failed");
             continue;
