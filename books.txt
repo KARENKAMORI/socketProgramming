@@ -1,0 +1,7 @@
+No   Title         Authors           ISBN    Publisher  DateOfPublication  Quantity  Price
+1    The_Rain      Jennifer_Bett     19384   Longhorn   2016              49         1000
+2    Africah       Mark_Twain        191732  Longhorn   1898               1         9999
+3    Lion_Chase    Dinkra_Oleine     193941  Penguin    2010              30         2399
+4    Blossoms      Henry Kulet       193942  Moran      2015              10         1500
+5    Chozi         Assumpta          193943  Moran      2019              20          500
+6    Lion King     Disney            193944  Longhorn   2020              40         2000
