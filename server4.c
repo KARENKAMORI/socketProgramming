@@ -272,7 +272,7 @@ int order_book(char *title, int ISBN, int n, int client_socket)
 	return found ? 1 : 0;
 }
 
-    snprintf(response, sizeof(response), "Book not found\n");
+    //snprintf(response, sizeof(response), "Book not found\n");
     write(client_sockfd, response, strlen(response));
     return -1;
 }
