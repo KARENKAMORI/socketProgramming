@@ -215,38 +215,62 @@ void search_book(char* string, int client_sockfd) {
 
 
 // Function to order a book
-int order_book(char* title, int ISBN, int n, int client_sockfd) {
-    struct bookStore books[MAX_LINE_LENGTH];
-    int total_books = read_books_from_file(books, MAX_LINE_LENGTH);
-    char response[MAX_RESPONSE_SIZE];
-    memset(response, 0, sizeof(response));
+int order_book(char *title, int ISBN, int n, int client_socket)
+{
+	FILE *fptr = fopen(bookFile, "r+");
+	if (!fptr)
+	{
+		char response[MAX_RESPONSE_SIZE] = "Error: Unable to open file.\n";
+		send(client_socket, response, strlen(response), 0);
+		return 0;
+	}
 
-    if (total_books < 0) {
-        snprintf(response, sizeof(response), "Error reading book file\n");
-        write(client_sockfd, response, strlen(response));
-        return -1;
-    }
+	char line[MAX_LINE_LENGTH];
+	long pos;
+	int found = 0;
+	struct bookStore orderedBook;
 
-    for (int i = 0; i < total_books; i++) {
-        if (books[i].ISBN == ISBN && strcmp(books[i].title, title) == 0) {
-            if (books[i].quantity >= n) {
-                books[i].quantity -= n;
-                currentOrder.orderNo = ++orderCount;
-                strncpy(currentOrder.title, title, sizeof(currentOrder.title) - 1);
-                currentOrder.ISBN = ISBN;
-                currentOrder.quantity = n;
-                currentOrder.totalAmount = n * books[i].price;
-                snprintf(response, sizeof(response), "Order placed successfully. Order No: %d, Title: %s, ISBN: %d, Quantity: %d, Total Amount: %d\n",
-                         currentOrder.orderNo, currentOrder.title, currentOrder.ISBN, currentOrder.quantity, currentOrder.totalAmount);
-                write(client_sockfd, response, strlen(response));
-                return 0;
-            } else {
-                snprintf(response, sizeof(response), "Insufficient stock\n");
-                write(client_sockfd, response, strlen(response));
-                return -1;
-            }
-        }
-    }
+	while ((pos = ftell(fptr)) >= 0 && fgets(line, sizeof(line), fptr) != NULL)
+	{
+		struct bookStore book;
+		sscanf(line, "%d %39s %49s %d %49s %11s %d %d",
+			   &book.no, book.title, book.authors, &book.ISBN, book.publisher, book.dateOfPublication, &book.quantity, &book.price);
+
+		if (strcmp(book.title, title) == 0 && book.ISBN == ISBN && book.quantity >= n)
+		{
+			book.quantity -= n;
+			fseek(fptr, pos, SEEK_SET);
+			fprintf(fptr, "%d %s %s %d %s %s %d %d\n",
+					book.no, book.title, book.authors, book.ISBN, book.publisher, book.dateOfPublication, book.quantity, book.price);
+			orderedBook = book;
+			found = 1;
+			break;
+		}
+	}
+
+	fclose(fptr);
+
+	if (found)
+	{
+		char response[MAX_RESPONSE_SIZE];
+		snprintf(response, MAX_RESPONSE_SIZE, "Order placed successfully. Order number: %d\nBook: %s\nQuantity: %d\nTotal Amount: %d\n",
+				 ++orderCount, orderedBook.title, n, n * orderedBook.price);
+		send(client_socket, response, strlen(response), 0);
+
+		currentOrder.orderNo = orderCount;
+		strcpy(currentOrder.title, orderedBook.title);
+		currentOrder.ISBN = orderedBook.ISBN;
+		currentOrder.quantity = n;
+		currentOrder.totalAmount = n * orderedBook.price;
+	}
+	else
+	{
+		char response[MAX_RESPONSE_SIZE] = "Book not found or insufficient quantity\n";
+		send(client_socket, response, strlen(response), 0);
+	}
+
+	return found ? 1 : 0;
+}
 
     snprintf(response, sizeof(response), "Book not found\n");
     write(client_sockfd, response, strlen(response));
