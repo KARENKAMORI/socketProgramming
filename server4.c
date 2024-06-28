@@ -217,7 +217,7 @@ void search_book(char* string, int client_sockfd) {
 // Function to order a book
 int order_book(char *title, int ISBN, int n, int client_socket)
 {
-	FILE *fptr = fopen(bookFile, "r+");
+	FILE *fptr = fopen("books.txt", "r+");
 	if (!fptr)
 	{
 		char response[MAX_RESPONSE_SIZE] = "Error: Unable to open file.\n";
